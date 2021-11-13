@@ -28,7 +28,7 @@ K_NAMES = ['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear', 'left_shoul
            'right_wrist', 'left_hip', 'right_hip', 'left_knee', 'right_knee', 'left_ankle', 'right_ankle']  # it is set later in the code just in case
 
 # PATHS
-TRAIN_ANNOT_PATH = 'coco/annotations/person_keypoints_train2017.json'  # annotations
+TRAIN_ANNOT_PATH = '../coco/annotations/person_keypoints_train2017.json'  # annotations
 VAL_ANNOT_PATH = 'coco/annotations/person_keypoints_val2017.json'  # annotations
 PATH_TRAIN = 'coco/images/train2017'  # images
 PATH_VAL = 'coco/images/val2017'  # images
