@@ -1,9 +1,9 @@
 import os
 
-from model.layers import create_global_net, create_refine_net
 from tensorflow.keras.utils import Progbar
 from tensorflow.keras import Input, Model
 from dataprocessing.dataset import *
+from model.model import *
 from model.utils import *
 
 import model.resnet_backbone as backbone
@@ -16,12 +16,10 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 def define_model(input_shape):
     input = Input(shape=input_shape)
-    _, C2, C3, C4, C5 = backbone.resnet_graph(input, 'resnet50', stage5=True)
-    backbone_blocks = [C2, C3, C4, C5]
-    global_fms, global_out = create_global_net(backbone_blocks, cfg)
-    refine_out = create_refine_net(global_fms, cfg)
-    model = Model(inputs=input, outputs=[
-                  global_out, refine_out], name=cfg.NAME)
+    backbone = get_backbone_resnet50(input_shape)
+    global_fms, global_out = GlobalNet(backbone=backbone)(input)
+    refine_out = RefineNet()(global_fms)
+    model = Model(inputs=input, outputs=[global_out, refine_out])
     return model
 
 

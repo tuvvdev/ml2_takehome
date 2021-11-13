@@ -3,12 +3,15 @@
 Reimplementing the paper: [Cascaded Pyramid Network for Multi-Person Pose Estimation](https://arxiv.org/abs/1711.07319)
 
 ## Dataset
+
 The model uses the COCO dataset which can be downloaded by typing:
+
 ```
 chmod +x coco.sh
 ./coco.sh
 ```
-The data is going to be saved inside the  ```coco/``` folder.
+
+The data is going to be saved inside the `coco/` folder.
 
 I actually got the wrong idea of the assigment from the beginning and didn't relize until I searched for a pytorch code on Github for reference.
 
@@ -20,13 +23,28 @@ python dataprocessing/process_data.py
 ```
 
 ## Training
+
 ```
 python train.py
 ```
 
+## Test
+
+```
+python test.py
+```
+
+The results are shown below, I know that this one is not a perfect one, but if I have more time I think the model will get better.
+
+<center>
+![rs_img](result.png)
+</center>
+
 ## Notes
-- the model was not finished training yet, then I was not able to test it. 
+
+- the model was not finished training yet, then I was not able to test it.
 - There was a typo in the code when I created the dataset and I just figured it out on Friday then everything is just like a fresh start. I will keep training and update the weight file and test code as well as the result.
 
 ## Reference
-The repo is heavily based on the pytorch version and keras version and the official keras tutorial about keypoint estimation.
+
+The repo is heavily based on the [pytorch version](https://github.com/GengDavid/pytorch-cpn) and [tensorflow version](https://github.com/chenyilun95/tf-cpn) and the official keras tutorial about keypoint estimation.
