@@ -36,9 +36,7 @@ python test.py
 
 The results are shown below, I know that this one is not a perfect one, but if I have more time I think the model will get better.
 
-<center>
 ![rs_img](result.png)
-</center>
 
 ## Notes
 
