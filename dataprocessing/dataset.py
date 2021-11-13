@@ -1,17 +1,17 @@
-from ast import literal_eval
-from tensorflow import keras
-import tensorflow as tf
-
 from imgaug.augmentables.kps import KeypointsOnImage
 from imgaug.augmentables.kps import Keypoint
-import imgaug.augmenters as iaa
-
+from matplotlib import pyplot as plt
+from ast import literal_eval
+from tensorflow.keras import utils as KU
 from utils import *
 from PIL import Image
-from matplotlib import pyplot as plt
+
+import imgaug.augmenters as iaa
+import tensorflow as tf
 import pandas as pd
 import numpy as np
 import config as cfg
+import random
 import os
 
 # Utility for reading an image and for getting its annotations.
@@ -42,7 +42,7 @@ def get_data(name, df, train=False):
     return data
 
 
-class KeyPointsDataset(keras.utils.Sequence):
+class KeyPointsDataset(KU.Sequence):
     def __init__(self, image_keys, aug, df, BATCH_SIZE=32, train=True):
         self.image_keys = image_keys
         self.aug = aug
@@ -83,13 +83,16 @@ class KeyPointsDataset(keras.utils.Sequence):
             k_vis = np.array(data["k_vis"])
             kps = []
 
-            target15 = np.zeros((cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1], cfg.NR_SKELETON))
-            target11 = np.zeros((cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1], cfg.NR_SKELETON))
-            target9 = np.zeros((cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1], cfg.NR_SKELETON))
-            target7 = np.zeros((cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1], cfg.NR_SKELETON))
+            target15 = np.zeros(
+                (cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1], cfg.NR_SKELETON))
+            target11 = np.zeros(
+                (cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1], cfg.NR_SKELETON))
+            target9 = np.zeros(
+                (cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1], cfg.NR_SKELETON))
+            target7 = np.zeros(
+                (cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1], cfg.NR_SKELETON))
             idx = np.where(k_vis == 0)
             current_keypoint[idx, :2] = -1000000
-
 
             # To apply our data augmentation pipeline, we first need to
             # form Keypoint objects with the original coordinates.
@@ -116,22 +119,29 @@ class KeyPointsDataset(keras.utils.Sequence):
                 kp_temp.append(np.nan_to_num(keypoint.x / cfg.IMG_WIDTH))
                 kp_temp.append(np.nan_to_num(keypoint.y / cfg.IMG_HEIGHT))
 
-                kp_temp_out.append(min(np.nan_to_num(keypoint.x) // 4, cfg.OUTPUT_SHAPE[1]-1))
-                kp_temp_out.append(min(np.nan_to_num(keypoint.y) // 4, cfg.OUTPUT_SHAPE[0]-1))
+                kp_temp_out.append(
+                    min(np.nan_to_num(keypoint.x) // 4, cfg.OUTPUT_SHAPE[1]-1))
+                kp_temp_out.append(
+                    min(np.nan_to_num(keypoint.y) // 4, cfg.OUTPUT_SHAPE[0]-1))
 
-            kp_temp = np.array(kp_temp).reshape(-1,2)
-            kp_temp_out = np.array(kp_temp_out).reshape(-1,2)
+            kp_temp = np.array(kp_temp).reshape(-1, 2)
+            kp_temp_out = np.array(kp_temp_out).reshape(-1, 2)
 
             for k in range(cfg.NR_SKELETON):
-                if k_vis[k] > 0: # COCO visible: 0-no label, 1-label + invisible, 2-label + visible
+                if k_vis[k] > 0:  # COCO visible: 0-no label, 1-label + invisible, 2-label + visible
                     if kp_temp_out[k][0] < 0. or kp_temp_out[k][1] < 0.:
                         continue
-                    target15[:,:,k] = generate_heatmap(target15[:,:,k], kp_temp_out[k], cfg.gk15)
-                    target11[:,:,k] = generate_heatmap(target11[:,:,k], kp_temp_out[k], cfg.gk11)
-                    target9[:,:,k] = generate_heatmap(target9[:,:,k], kp_temp_out[k], cfg.gk9)
-                    target7[:,:,k] = generate_heatmap(target7[:,:,k], kp_temp_out[k], cfg.gk7)
-                    
-            target = [np.array(target15), np.array(target11), np.array(target9), np.array(target7)]
+                    target15[:, :, k] = generate_heatmap(
+                        target15[:, :, k], kp_temp_out[k], cfg.gk15)
+                    target11[:, :, k] = generate_heatmap(
+                        target11[:, :, k], kp_temp_out[k], cfg.gk11)
+                    target9[:, :, k] = generate_heatmap(
+                        target9[:, :, k], kp_temp_out[k], cfg.gk9)
+                    target7[:, :, k] = generate_heatmap(
+                        target7[:, :, k], kp_temp_out[k], cfg.gk7)
+
+            target = [np.array(target15), np.array(target11),
+                      np.array(target9), np.array(target7)]
             valid = k_vis
 
             batch_keypoints[i, ] = np.array(kp_temp).reshape(1, 1, 17 * 2)
@@ -201,10 +211,10 @@ if __name__ == '__main__':
     print(f"Total batches in training set: {len(train_dataset)}")
     print(f"Total batches in validation set: {len(validation_dataset)}")
 
-    sample_images, sample_keypoints, sample_targets, sample_valids = next(iter(train_dataset))
+    sample_images, sample_keypoints, sample_targets, sample_valids = next(
+        iter(train_dataset))
 
-    import random
-    i = random.randint(0, 32)
+    i = random.randint(0, cfg.BATCH_SIZE)
     sample_keypoints = sample_keypoints[i:i+2].numpy().reshape(-1, 17, 2)
     sample_keypoints[:, :, 0] = sample_keypoints[:, :, 0] * cfg.IMG_WIDTH
     sample_keypoints[:, :, 1] = sample_keypoints[:, :, 1] * cfg.IMG_HEIGHT

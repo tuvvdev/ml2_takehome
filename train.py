@@ -1,27 +1,29 @@
 import os
 
-from layers import create_global_net, create_refine_net
-import resnet_backbone as backbone
-from utils import *
-import config as cfg
-from dataset import *
-
-import tensorflow as tf
-from tensorflow.keras import Input, Model
-import config
+from model.layers import create_global_net, create_refine_net
 from tensorflow.keras.utils import Progbar
+from tensorflow.keras import Input, Model
+from dataprocessing.dataset import *
+from model.utils import *
+
+import model.resnet_backbone as backbone
+import model.config as cfg
+import tensorflow as tf
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
 
 def define_model(input_shape):
     input = Input(shape=input_shape)
     _, C2, C3, C4, C5 = backbone.resnet_graph(input, 'resnet50', stage5=True)
     backbone_blocks = [C2, C3, C4, C5]
-    global_fms, global_out = create_global_net(backbone_blocks, config)
-    refine_out = create_refine_net(global_fms, config)
-    model = Model(inputs=input, outputs=[global_out, refine_out])
+    global_fms, global_out = create_global_net(backbone_blocks, cfg)
+    refine_out = create_refine_net(global_fms, cfg)
+    model = Model(inputs=input, outputs=[
+                  global_out, refine_out], name=cfg.NAME)
     return model
+
 
 @tf.function
 def train_step(images, targets, valids):
@@ -31,6 +33,7 @@ def train_step(images, targets, valids):
         # grads = tf.gradients(loss_value, model.trainable_variables)
     grads = tape.gradient(loss_value, model.trainable_weights)
     return loss_value, grads
+
 
 @tf.function
 def val_step(model, images, targets, valids):
@@ -65,7 +68,8 @@ val_df = pd.read_csv('coco/annotations/person_keypoints_val2017.csv')
 train_keys = list(train_df.path)
 validation_keys = list(val_df.path)
 
-train_dataset = KeyPointsDataset(train_keys, train_aug, train_df, BATCH_SIZE=cfg.BATCH_SIZE)
+train_dataset = KeyPointsDataset(
+    train_keys, train_aug, train_df, BATCH_SIZE=cfg.BATCH_SIZE)
 validation_dataset = KeyPointsDataset(
     validation_keys, test_aug, val_df, train=False, BATCH_SIZE=cfg.BATCH_SIZE)
 
@@ -74,15 +78,18 @@ print(f"Total batches in validation set: {len(validation_dataset)}")
 
 
 epochs = cfg.EPOCHS
-optimizer = tf.keras.optimizers.SGD(learning_rate=cfg.LEARNING_RATE, clipnorm=cfg.GRADIENT_CLIP_NORM)
+optimizer = tf.keras.optimizers.SGD(
+    learning_rate=cfg.LEARNING_RATE, clipnorm=cfg.GRADIENT_CLIP_NORM)
 min_loss = cfg.min_loss
-metrics_names = ['train_loss','val_loss'] 
+metrics_names = ['train_loss', 'val_loss']
 
 for epoch in range(epochs):
-    print("\nepoch {}/{}".format(epoch+1,epochs))
-    
-    pb = Progbar(len(train_dataset) * config.BATCH_SIZE, stateful_metrics=metrics_names)
-    train_dataset = KeyPointsDataset(train_keys, train_aug, train_df, BATCH_SIZE=cfg.BATCH_SIZE)
+    print("\nEpoch {}/{}".format(epoch+1, epochs))
+
+    pb = Progbar(len(train_dataset) * cfg.BATCH_SIZE,
+                 stateful_metrics=metrics_names)
+    train_dataset = KeyPointsDataset(
+        train_keys, train_aug, train_df, BATCH_SIZE=cfg.BATCH_SIZE)
     validation_dataset = KeyPointsDataset(
         validation_keys, test_aug, val_df, train=False, BATCH_SIZE=cfg.BATCH_SIZE)
 
@@ -95,14 +102,15 @@ for epoch in range(epochs):
 
         train_loss += loss_value
         show_loss = train_loss / (step+1)
-        values=[('train_loss',show_loss)]
-        pb.update(step*cfg.BATCH_SIZE, values=values) 
+        values = [('train_loss', show_loss)]
+        pb.update(step*cfg.BATCH_SIZE, values=values)
     # Run a validation loop at the end of each epoch.
     val_loss = 0
     for i, (x_batch_val, y_batch_val, label_batch_val, valid_batch_val) in enumerate(validation_dataset):
-        val_loss += val_step(model, x_batch_val, label_batch_val, valid_batch_val)
+        val_loss += val_step(model, x_batch_val,
+                             label_batch_val, valid_batch_val)
     val_loss /= (i+1)
-    values=[('train_loss',show_loss),('val_loss',val_loss)]
+    values = [('train_loss', show_loss), ('val_loss', val_loss)]
 
     pb.update(len(train_dataset) * cfg.BATCH_SIZE, values=values)
     if val_loss < min_loss:
