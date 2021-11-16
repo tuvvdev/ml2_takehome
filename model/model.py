@@ -78,12 +78,8 @@ class GlobalNet(models.Model):
         p2_output = self.conv_c2_3x3(p2_feature)
         p3_output = self.conv_c3_3x3(p3_feature)
         p4_output = self.conv_c4_3x3(p4_feature)
-        p5_output = self.conv_c3_3x3(p5_feature)
+        p5_output = self.conv_c5_3x3(p5_feature)
 
-        # p2_output = self.reshape(p2_output)
-        # p3_output = self.reshape(p3_output)
-        # p4_output = self.reshape(p4_output)
-        # p5_output = self.reshape(p5_output)
         p2_output = tf.image.resize(p2_output, size=(cfg.output_shape[0], cfg.output_shape[1]))
         p3_output = tf.image.resize(p3_output, size=(cfg.output_shape[0], cfg.output_shape[1]))
         p4_output = tf.image.resize(p4_output, size=(cfg.output_shape[0], cfg.output_shape[1]))
