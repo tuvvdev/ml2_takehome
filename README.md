@@ -36,7 +36,18 @@ python test.py
 
 The results are shown below, I know that this one is not a perfect one, but if I have more time I think the model will get better.
 
-![rs_img](result.png)
+| Input                            | Prediction                              |
+| -------------------------------- | --------------------------------------- |
+| ![](test_images/baseball.jpeg)   | ![](test_images/baseball.jpeg_rs.png)   |
+| ![](test_images/basketball.jpeg) | ![](test_images/basketball.jpeg_rs.png) |
+| ![](test_images/standing.jpeg)   | ![](test_images/standing.jpeg_rs.png)   |
+| ![](test_images/yoga3.jpeg)      | ![](test_images/yoga3.jpeg_rs.png)      |
+
+Failed cases
+| Input | Prediction |
+| ----------- | ----------- |
+| ![](test_images/jumping.jpeg)|![](test_images/jumping.jpeg_rs.png)|
+| ![](test_images/ronaldo.jpeg)|![](test_images/ronaldo.jpeg_rs.png)|
 
 ## Notes
 

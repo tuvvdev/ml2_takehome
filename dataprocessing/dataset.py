@@ -3,14 +3,14 @@ from imgaug.augmentables.kps import Keypoint
 from matplotlib import pyplot as plt
 from ast import literal_eval
 from tensorflow.keras import utils as KU
-from utils import *
+from model.utils import *
 from PIL import Image
 
 import imgaug.augmenters as iaa
 import tensorflow as tf
 import pandas as pd
 import numpy as np
-import config as cfg
+import model.config as cfg
 import random
 import os
 

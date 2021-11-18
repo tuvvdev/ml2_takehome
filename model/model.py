@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
-import config as cfg
+import model.config as cfg
 from tensorflow import keras
-from tensorflow.keras import activations, layers, models, applications
+from tensorflow.keras import layers, models, applications
 
 
 def get_backbone_resnet50(input_shape):
@@ -45,13 +45,13 @@ class GlobalNet(models.Model):
         self.conv_c9_1x1 = keras.layers.Conv2D(256, 1, 1, "same")
 
         self.conv_c2_3x3 = keras.layers.Conv2D(
-            cfg.nr_skeleton, 3, 3, "same", activation=None)
+            cfg.NR_SKELETON, 3, 3, "same")
         self.conv_c3_3x3 = keras.layers.Conv2D(
-            cfg.nr_skeleton, 3, 1, "same", activation=None)
+            cfg.NR_SKELETON, 3, 3, "same")
         self.conv_c4_3x3 = keras.layers.Conv2D(
-            cfg.nr_skeleton, 3, 1, "same", activation=None)
+            cfg.NR_SKELETON, 3, 3, "same")
         self.conv_c5_3x3 = keras.layers.Conv2D(
-            cfg.nr_skeleton, 3, 1, "same", activation=None)
+            cfg.NR_SKELETON, 3, 3, "same")
         self.conv_c6_3x3 = keras.layers.Conv2D(256, 3, 2, "same")
         self.conv_c7_3x3 = keras.layers.Conv2D(256, 3, 2, "same")
         self.upsample_2x = keras.layers.UpSampling2D(2)
@@ -80,10 +80,14 @@ class GlobalNet(models.Model):
         p4_output = self.conv_c4_3x3(p4_feature)
         p5_output = self.conv_c5_3x3(p5_feature)
 
-        p2_output = tf.image.resize(p2_output, size=(cfg.output_shape[0], cfg.output_shape[1]))
-        p3_output = tf.image.resize(p3_output, size=(cfg.output_shape[0], cfg.output_shape[1]))
-        p4_output = tf.image.resize(p4_output, size=(cfg.output_shape[0], cfg.output_shape[1]))
-        p5_output = tf.image.resize(p5_output, size=(cfg.output_shape[0], cfg.output_shape[1]))
+        # p2_output = self.reshape(p2_output)
+        # p3_output = self.reshape(p3_output)
+        # p4_output = self.reshape(p4_output)
+        # p5_output = self.reshape(p5_output)
+        p2_output = tf.image.resize(p2_output, size=(cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1]))
+        p3_output = tf.image.resize(p3_output, size=(cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1]))
+        p4_output = tf.image.resize(p4_output, size=(cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1]))
+        p5_output = tf.image.resize(p5_output, size=(cfg.OUTPUT_SHAPE[0], cfg.OUTPUT_SHAPE[1]))
 
         global_feature = [p2_feature, p3_feature, p4_feature, p5_feature]
         global_output = [p2_output, p3_output, p4_output, p5_output]
@@ -126,9 +130,9 @@ class RefineNet(models.Model):
         self.upsample_8x = keras.layers.UpSampling2D(8)
 
         self.conv_out = keras.layers.Conv2D(
-            cfg.nr_skeleton, 3, 1, 'same', activation=None)
+            cfg.NR_SKELETON, 3, 1, 'same', activation=None)
 
-    def call(self, inputs, training=None, mask=None):
+    def call(self, inputs, training=True, mask=None):
         p2_feature, p3_feature, p4_feature, p5_feature = inputs[0], inputs[1], inputs[2], inputs[3]
         p3_bn = self.bottle_neck_31(p3_feature)
         p4_bn = self.bottle_neck_42(self.bottle_neck_41(p4_feature))
